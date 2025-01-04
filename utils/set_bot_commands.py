@@ -6,6 +6,6 @@ async def set_default_commands(dp):
     """
     await dp.bot.set_my_commands([
         types.BotCommand("start", "Start the bot"),
+        types.BotCommand("classify", "Start the classification process"),
         types.BotCommand("help", "Show help information"),
-        types.BotCommand("language", "Set your preferred language (En, Ru, Uz)"),
     ])
