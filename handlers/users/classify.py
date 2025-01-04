@@ -1,8 +1,10 @@
 import re
+from datetime import datetime
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command
 from aiogram.types import CallbackQuery
+from utils.db_api.google_sheets import GoogleSheetsClient
 from loader import dp
 from difflib import get_close_matches
 from states.classify_state import ClassifyState
@@ -22,7 +24,7 @@ async def start_classification(message: types.Message):
 
 
 @dp.callback_query_handler(state=ClassifyState.choose_type)
-async def process_choose_type(call: CallbackQuery, state: FSMContext):
+async def process_being_type(call: CallbackQuery, state: FSMContext):
     """
     Handle the user's selection of being type.
     """
@@ -57,7 +59,7 @@ async def process_choose_type(call: CallbackQuery, state: FSMContext):
         await call.message.answer("Invalid choice. Please use the buttons provided.")
 
 @dp.message_handler(state=ClassifyState.human_gender)
-async def process_human_gender(message: types.Message, state: FSMContext):
+async def process_human_data(message: types.Message, state: FSMContext):
     await message.delete()
     await message.answer(f"✨ You have to provide your gender. Please choose one of them above: 👆🏻\n"
                          f"👨 Male or 👩 Female")
@@ -532,3 +534,58 @@ async def edit_height(call: CallbackQuery, state: FSMContext):
 
 
 
+@dp.callback_query_handler(lambda call: call.data == "submit_data", state="*")
+async def handle_submit_data(call: CallbackQuery, state: FSMContext):
+    """
+    Handle the submission of user data to Google Sheets.
+    """
+    # Retrieve all data from FSMContext
+    data = await state.get_data()
+    gender = data.get("gender", "Not provided")
+    age = data.get("age", "Not provided")
+    nationality = data.get("nationality", "Not provided")
+    education = data.get("education", "Not provided")
+    eye_color = data.get("eye_color", "Not provided")
+    hair_color = data.get("hair_color", "Not provided")
+    height = data.get("height", "Not provided")
+
+    # Generate a unique identifier for this submission (e.g., a timestamp or unique number)
+    unique_bot_data = str(int(datetime.now().timestamp()))
+    current_date = datetime.now().strftime("%Y-%m-%d")
+
+    # Initialize Google Sheets client
+    sheets_client = GoogleSheetsClient(credentials_file="credentials.json", spreadsheet_name="Being Classification Data")
+
+    try:
+        # Authenticate and get the current row count
+        sheets_client.authenticate()
+        row_count = sheets_client.get_row_count("Humans")  # Count rows in the "Humans" worksheet
+
+        # Create the row in the correct order
+        row = [
+            row_count,  # No. of line (based on current row count)
+            unique_bot_data,  # Unique Bot Data #
+            call.from_user.first_name,  # Initiator Name
+            gender,  # Gender
+            age,  # Age
+            nationality,  # Nationality
+            education,  # Education
+            eye_color,  # Eye color
+            hair_color,  # Hair color
+            height,  # Height
+            current_date,  # Date
+        ]
+
+        # Append the data to the sheet
+        sheets_client.append_data("Humans", row)
+
+        # Acknowledge successful submission
+        await call.message.edit_text("✅ Your data has been successfully submitted to Google Sheets. Thank you! 🎉")
+        await call.answer()
+    except Exception as e:
+        # Handle errors during submission
+        await call.message.edit_text(f"❌ An error occurred while submitting your data: {e}. Please try again.")
+        await call.answer()
+
+    # Finish the state
+    await state.finish()
