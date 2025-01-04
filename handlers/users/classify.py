@@ -1,13 +1,14 @@
 import re
+import asyncio
 from datetime import datetime
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command
 from aiogram.types import CallbackQuery
 from utils.db_api.google_sheets import GoogleSheetsClient
-from loader import dp
+from loader import dp, bot
 from difflib import get_close_matches
-from states.classify_state import ClassifyState
+from states.classify_state import ClassifyState, ClassifyAnimalState
 from keyboards.inline.choose_type import choose_type_keyboard
 from data.predefined_lists import nationalities, colors
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -48,9 +49,9 @@ async def process_being_type(call: CallbackQuery, state: FSMContext):
         await call.message.answer("You selected: 👤 Human. Please provide the gender (Male/Female):", reply_markup=keyboard)
         await ClassifyState.human_gender.set()  # Transition to the first Human flow state
     elif choice == "animal":
-        await call.message.answer("You selected: 🐾 Animal. Let's proceed with data collection.")
-        # Transition to the Animal flow (to be added)
-        await state.finish()
+        await call.message.answer("Please provide the species (e.g., Dog, Cat):")
+        await ClassifyAnimalState.species.set()
+
     elif choice == "alien":
         await call.message.answer("You selected: 👽 Alien. Let's proceed with data collection.")
         # Transition to the Alien flow (to be added)
@@ -58,11 +59,57 @@ async def process_being_type(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer("Invalid choice. Please use the buttons provided.")
 
+
 @dp.message_handler(state=ClassifyState.human_gender)
 async def process_human_data(message: types.Message, state: FSMContext):
-    await message.delete()
-    await message.answer(f"✨ You have to provide your gender. Please choose one of them above: 👆🏻\n"
-                         f"👨 Male or 👩 Female")
+    """
+    Handle the human classification flow step by step.
+    """
+    current_state = await state.get_state()
+
+    if current_state == ClassifyState.human_gender.state:
+        # Handle gender input
+        await message.delete()
+        await message.answer(f"✨ You have to provide your gender.\nPlease choose one of them above: 👆🏻\n👨 Male or 👩 Female")
+
+    elif current_state == ClassifyState.human_age.state:
+        # Handle age input
+        try:
+            age = int(message.text.strip())
+            if age < 15 or age > 120:
+                await message.answer("Invalid age. Please enter a realistic age between 15 and 120.")
+                return
+            await state.update_data(age=age)
+            await message.answer("What is your nationality?")
+            await ClassifyState.human_nationality.set()
+        except ValueError:
+            await message.answer("Invalid input. Please enter a numeric value for age.")
+
+    elif current_state == ClassifyState.human_nationality.state:
+        # Handle nationality input
+        input_text = message.text.strip()
+        if not input_text.isalpha():
+            await message.answer("Invalid input. Please provide a valid text-only nationality (e.g., American, Uzbek).")
+            return
+
+        nationality = input_text.capitalize()
+        similar_nationalities = get_close_matches(nationality, nationalities, n=10, cutoff=0.4)
+        if not similar_nationalities:
+            await message.answer("No similar nationalities found. Please try again with a different input.")
+            return
+
+        keyboard = InlineKeyboardMarkup(row_width=5)
+        for i, name in enumerate(similar_nationalities):
+            keyboard.insert(InlineKeyboardButton(text=f"{i + 1}", callback_data=f"nationality_{i}"))
+        keyboard.add(InlineKeyboardButton(text="🔄 Reenter", callback_data="reenter_nationality"))
+
+        results = "\n".join([f"{i + 1}. {name}" for i, name in enumerate(similar_nationalities)])
+        await message.answer(
+            f"Did you mean one of these nationalities?\n\n{results}\n\n"
+            "Please select one using the buttons below:",
+            reply_markup=keyboard
+        )
+        await ClassifyState.human_nationality.set()
 
 
 @dp.callback_query_handler(lambda call: call.data.startswith("gender_"), state=ClassifyState.human_gender)
@@ -537,8 +584,18 @@ async def edit_height(call: CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(lambda call: call.data == "submit_data", state="*")
 async def handle_submit_data(call: CallbackQuery, state: FSMContext):
     """
-    Handle the submission of user data to Google Sheets.
+    Handle the submission of user data to a Telegram group and Google Sheets, including row count for No. of line.
     """
+
+    # Start with a "processing" message
+    loading_message = await call.message.edit_text("⏳ Processing your data: 0%")
+
+    # Incrementally update the percentage
+    for i in range(10, 101, 10):  # Increment by 10% up to 100%
+        await asyncio.sleep(0.5)  # Simulate processing time
+        await loading_message.edit_text(f"⏳ Processing your data: {i}%")
+
+
     # Retrieve all data from FSMContext
     data = await state.get_data()
     gender = data.get("gender", "Not provided")
@@ -549,42 +606,85 @@ async def handle_submit_data(call: CallbackQuery, state: FSMContext):
     hair_color = data.get("hair_color", "Not provided")
     height = data.get("height", "Not provided")
 
-    # Generate a unique identifier for this submission (e.g., a timestamp or unique number)
-    unique_bot_data = str(int(datetime.now().timestamp()))
+    # Generate unique ID and current date
+    unique_id = str(int(datetime.now().timestamp()))
     current_date = datetime.now().strftime("%Y-%m-%d")
 
     # Initialize Google Sheets client
     sheets_client = GoogleSheetsClient(credentials_file="credentials.json", spreadsheet_name="Being Classification Data")
+    sheets_client.authenticate()
+
+    # Fetch existing rows to calculate the row count
+    try:
+        rows = sheets_client.get_data("Humans")  # Replace "Humans" with the correct worksheet name
+        row_count = len(rows)  # Add 1 for the new row
+    except Exception as e:
+        await call.message.edit_text(f"❌ Failed to fetch row count: {e}")
+        await call.answer()
+        return
+
+    # Prepare data for group posting
+    post_data = {
+        "no_of_line": row_count,  # Use the calculated row count
+        "unique_id": unique_id,
+        "initiator": call.from_user.full_name,
+        "gender": gender,
+        "age": age,
+        "nationality": nationality,
+        "education": education,
+        "eye_color": eye_color,
+        "hair_color": hair_color,
+        "height": height,
+        "date": current_date,
+        "specie": "Human",
+    }
+
+    # Format the message template for group posting
+    group_message = (
+        f"🆔 #{post_data['unique_id']}\n"
+        f"📅 {post_data['date']}\n"
+        f"👤 Specie: {post_data['specie']}\n"
+        f"⚧️ Gender: {post_data.get('gender', 'N/A')}\n"
+        f"🌍 Nationality: {post_data.get('nationality', 'N/A')}\n"
+        f"🎓 Education: {post_data.get('education', 'N/A')}\n"
+        f"👁️ Eye Color: {post_data.get('eye_color', 'N/A')}\n"
+        f"💇 Hair Color: {post_data.get('hair_color', 'N/A')}\n"
+        f"📏 Height: {post_data.get('height', 'N/A')} cm"
+    )
+
+    sheet_data = {
+        "no_of_line": row_count,  # Use the calculated row count
+        "unique_id": unique_id,
+        "initiator": call.from_user.full_name,
+        "gender": gender,
+        "age": age,
+        "nationality": nationality,
+        "education": education,
+        "eye_color": eye_color,
+        "hair_color": hair_color,
+        "height": height,
+        "date": current_date,
+    }
+
+    # Telegram group ID
+    group_id = -1002292534432  # Replace with your actual group ID
 
     try:
-        # Authenticate and get the current row count
-        sheets_client.authenticate()
-        row_count = sheets_client.get_row_count("Humans")  # Count rows in the "Humans" worksheet
+        # Post to Telegram group
+        await bot.send_message(chat_id=group_id, text=group_message)
 
-        # Create the row in the correct order
-        row = [
-            row_count,  # No. of line (based on current row count)
-            unique_bot_data,  # Unique Bot Data #
-            call.from_user.first_name,  # Initiator Name
-            gender,  # Gender
-            age,  # Age
-            nationality,  # Nationality
-            education,  # Education
-            eye_color,  # Eye color
-            hair_color,  # Hair color
-            height,  # Height
-            current_date,  # Date
-        ]
+        # Save to Google Sheets
+        sheets_client.append_data("Humans", list(sheet_data.values()))
 
-        # Append the data to the sheet
-        sheets_client.append_data("Humans", row)
-
-        # Acknowledge successful submission
-        await call.message.edit_text("✅ Your data has been successfully submitted to Google Sheets. Thank you! 🎉")
+        # Acknowledge success
+        # Final success message
+        await loading_message.edit_text(
+            "✅ Your data has been successfully posted to the group and saved to Google Sheets. Thank you! 🎉")
         await call.answer()
+
     except Exception as e:
-        # Handle errors during submission
-        await call.message.edit_text(f"❌ An error occurred while submitting your data: {e}. Please try again.")
+        # Handle errors
+        await call.message.edit_text(f"❌ An error occurred: {e}. Please try again.")
         await call.answer()
 
     # Finish the state

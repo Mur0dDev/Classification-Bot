@@ -40,3 +40,16 @@ colors = [
     "Olive", "Coral", "Amber", "Ivory", "Charcoal", "Mint", "Chocolate",
     "Crimson", "Salmon", "Indigo", "Plum", "Khaki", "Azure", "Emerald"
 ]
+
+# Predefined list of animals
+animals = [
+    "Dog", "Cat", "Lion", "Tiger", "Elephant", "Giraffe", "Cow", "Goat", "Sheep", "Horse",
+    "Kangaroo", "Panda", "Bear", "Wolf", "Fox", "Deer", "Rabbit", "Bat", "Dolphin", "Whale",
+    "Seal", "Monkey", "Gorilla", "Chimpanzee", "Eagle", "Parrot", "Sparrow", "Pigeon", "Owl",
+    "Penguin", "Flamingo", "Peacock", "Duck", "Swan", "Crow", "Seagull", "Falcon", "Woodpecker",
+    "Vulture", "Ostrich", "Snake", "Crocodile", "Alligator", "Lizard", "Turtle", "Gecko", "Iguana",
+    "Chameleon", "Komodo Dragon", "Frog", "Toad", "Salamander", "Newt", "Salmon", "Tuna", "Shark",
+    "Goldfish", "Betta", "Eel", "Trout", "Clownfish", "Stingray", "Seahorse", "Butterfly", "Bee",
+    "Ant", "Spider", "Ladybug", "Grasshopper", "Mosquito", "Dragonfly", "Wasp", "Beetle", "Moth",
+    "Crab", "Lobster", "Jellyfish", "Octopus", "Starfish", "Snail", "Earthworm", "Scorpion"
+]

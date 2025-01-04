@@ -18,3 +18,11 @@ class ClassifyState(StatesGroup):
     human_hair_color = State()  # Asking for hair color
     HUMAN_HAIR_COLOR = State()  # Asking for hair color
     human_height = State()  # Asking for height
+
+class ClassifyAnimalState(StatesGroup):
+    species = State()  # Collect species
+    mammal = State()  # Collect mammal (Yes/No)
+    predator = State()  # Collect predator (Yes/No)
+    color = State()  # Collect color
+    weight = State()  # Collect weight
+    age = State()  # Collect age

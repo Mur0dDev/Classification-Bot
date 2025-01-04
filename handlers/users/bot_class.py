@@ -3,11 +3,9 @@ from utils.db_api.google_sheets import GoogleSheetsClient  # Import Google Sheet
 from aiogram import Bot, Dispatcher
 
 class BeingClassifierBot:
-    def __init__(self, bot: Bot, dp: Dispatcher):
+    def __init__(self, bot, dp):
         """
         Initialize the bot, dispatcher, and Google Sheets client.
-        :param bot: Aiogram Bot instance.
-        :param dp: Aiogram Dispatcher instance.
         """
         self.bot = bot
         self.dp = dp
@@ -26,13 +24,32 @@ class BeingClassifierBot:
         # Callback query handlers
         self.dp.register_callback_query_handler(process_being_type, lambda call: call.data.startswith("type_"))
 
-        # Example: Add other handlers as needed
-        # self.dp.register_message_handler(process_human_data, state=...)
+        # Human flow handlers
+        self.dp.register_message_handler(process_human_data, state="*")
+
+        # Animal flow handlers
+        self.dp.register_message_handler(self.process_animal_data, state="*")
+
+        # Alien flow handlers
+        self.dp.register_message_handler(self.process_alien_data, state="*")
+
+    def process_animal_data(self, update, context):
+        """
+        Handle animal classification flow.
+        """
+        # Placeholder logic for animals
+        pass
+
+    def process_alien_data(self, update, context):
+        """
+        Handle alien classification flow.
+        """
+        # Placeholder logic for aliens
+        pass
 
     def save_to_sheets(self, data):
         """
         Save the classified data to Google Sheets.
-        :param data: List of data to save.
         """
         self.google_sheets.authenticate()
         self.google_sheets.append_data("Humans", data)
@@ -40,7 +57,6 @@ class BeingClassifierBot:
     def post_to_group(self, data):
         """
         Post the classification results to a Telegram group.
-        :param data: Data to format and post.
         """
-        # Placeholder for posting data to a Telegram group
         pass
+

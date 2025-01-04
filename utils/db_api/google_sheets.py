@@ -48,3 +48,12 @@ class GoogleSheetsClient:
             return len(worksheet.get_all_values())  # Count rows in the sheet
         except Exception as e:
             raise RuntimeError(f"Failed to get row count for worksheet '{worksheet_name}': {e}")
+
+    def get_data(self, worksheet_name: str) -> list:
+        """
+        Fetch all rows of data from the specified worksheet.
+        :param worksheet_name: The name of the worksheet.
+        :return: A list of rows (each row is a list of cell values).
+        """
+        worksheet = self.sheet.worksheet(worksheet_name)
+        return worksheet.get_all_values()
