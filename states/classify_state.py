@@ -21,6 +21,7 @@ class ClassifyState(StatesGroup):
 
 class ClassifyAnimalState(StatesGroup):
     species = State()  # Collect species
+    SPECIES = State()
     mammal = State()  # Collect mammal (Yes/No)
     predator = State()  # Collect predator (Yes/No)
     color = State()  # Collect color
