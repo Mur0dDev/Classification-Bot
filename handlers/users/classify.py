@@ -15,7 +15,6 @@ from data.predefined_lists import nationalities, colors
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-
 @dp.message_handler(IsPrivate(),Command("classify"))
 async def start_classification(message: types.Message):
     """
