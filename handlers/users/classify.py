@@ -8,7 +8,7 @@ from aiogram.types import CallbackQuery
 from utils.db_api.google_sheets import GoogleSheetsClient
 from loader import dp, bot
 from difflib import get_close_matches
-from states.classify_state import ClassifyState, ClassifyAnimalState
+from states.classify_state import ClassifyState, ClassifyAnimalState, ClassifyAlienState
 from keyboards.inline.choose_type import choose_type_keyboard
 from data.predefined_lists import nationalities, colors
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -53,9 +53,13 @@ async def process_being_type(call: CallbackQuery, state: FSMContext):
         await ClassifyAnimalState.species.set()
 
     elif choice == "alien":
-        await call.message.answer("You selected: 👽 Alien. Let's proceed with data collection.")
-        # Transition to the Alien flow (to be added)
-        await state.finish()
+        keyboard = InlineKeyboardMarkup(row_width=2)
+        keyboard.add(
+            InlineKeyboardButton(text="✅ Yes", callback_data="humanoid_yes"),
+            InlineKeyboardButton(text="❌ No", callback_data="humanoid_no"),
+        )
+        await call.message.answer("🛸 Is the alien humanoid? Please select one:", reply_markup=keyboard)
+        await ClassifyAlienState.humanoid.set()
     else:
         await call.message.answer("Invalid choice. Please use the buttons provided.")
 

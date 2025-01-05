@@ -434,7 +434,7 @@ async def submit_animal_data(call: CallbackQuery, state: FSMContext):
         row_data = [
             row_count,  # No. of line (You need to calculate this dynamically)
             unique_id,
-            data.get("initiator_name", "N/A"),  # Initiator Name
+            call.from_user.full_name,
             data.get("species", "N/A"),    # Species
             data.get("mammal", "N/A"),     # Mammal
             data.get("predator", "N/A"),   # Predator

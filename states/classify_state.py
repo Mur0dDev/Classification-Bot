@@ -27,3 +27,13 @@ class ClassifyAnimalState(StatesGroup):
     color = State()  # Collect color
     weight = State()  # Collect weight
     age = State()  # Collect age
+
+
+class ClassifyAlienState(StatesGroup):
+    humanoid = State()  # Step to determine if the alien is humanoid
+    race = State()      # Step to input the alien's race
+    skin_color = State()  # Step to input the skin color
+    dangerous = State()   # Step to determine if the alien is dangerous
+    has_reason = State()  # Step to determine if the alien has a reason
+    weight = State()      # Step to input the alien's weight
+
