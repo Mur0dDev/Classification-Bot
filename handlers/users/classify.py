@@ -1,5 +1,6 @@
 import re
 import asyncio
+from filters import IsPrivate
 from datetime import datetime
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -15,7 +16,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 
-@dp.message_handler(Command("classify"))
+@dp.message_handler(IsPrivate(),Command("classify"))
 async def start_classification(message: types.Message):
     """
     Entry point for the /classify command.
@@ -64,7 +65,7 @@ async def process_being_type(call: CallbackQuery, state: FSMContext):
         await call.message.answer("Invalid choice. Please use the buttons provided.")
 
 
-@dp.message_handler(state=ClassifyState.human_gender)
+@dp.message_handler(IsPrivate(), state=ClassifyState.human_gender)
 async def process_human_data(message: types.Message, state: FSMContext):
     """
     Handle the human classification flow step by step.
@@ -133,7 +134,7 @@ async def process_gender_selection(call: CallbackQuery, state: FSMContext):
     await ClassifyState.human_age.set()
 
 
-@dp.message_handler(state=ClassifyState.human_age)
+@dp.message_handler(IsPrivate(), state=ClassifyState.human_age)
 async def process_human_age(message: types.Message, state: FSMContext):
     """
     Process the age input with logical limits.
@@ -154,7 +155,7 @@ async def process_human_age(message: types.Message, state: FSMContext):
         await message.answer("Invalid input. Please enter a numeric value for age.")
 
 
-@dp.message_handler(state=ClassifyState.human_nationality)
+@dp.message_handler(IsPrivate(), state=ClassifyState.human_nationality)
 async def process_human_nationality(message: types.Message, state: FSMContext):
     """
     Process the nationality input.
@@ -197,7 +198,7 @@ async def process_human_nationality(message: types.Message, state: FSMContext):
     await state.update_data(similar_nationalities=similar_nationalities)
 
 
-@dp.message_handler(state=ClassifyState.HUMAN_NATIONALITY)
+@dp.message_handler(IsPrivate(), state=ClassifyState.HUMAN_NATIONALITY)
 async def process_human_nationality(message: types.Message, state: FSMContext):
     await message.delete()
     await message.answer(f"✨ You have to choose and click from the 🔢 number(s) above\nor you have to click 🔄 Reenter to edit your entry 📝")
@@ -239,7 +240,7 @@ async def process_nationality_reenter(call: CallbackQuery, state: FSMContext):
     await call.message.edit_text("Please provide the nationality again:")
     await call.answer()
 
-@dp.message_handler(state=ClassifyState.human_education)
+@dp.message_handler(IsPrivate(), state=ClassifyState.human_education)
 async def process_human_gender(message: types.Message, state: FSMContext):
     await message.delete()
     await message.answer(f"✨ You have to provide your eduction level. Please choose one of them above: 👆🏻\n"
@@ -263,7 +264,7 @@ async def process_education_selection(call: CallbackQuery, state: FSMContext):
     await ClassifyState.human_eye_color.set()
 
 
-@dp.message_handler(state=ClassifyState.human_eye_color)
+@dp.message_handler(IsPrivate(), state=ClassifyState.human_eye_color)
 async def process_human_eye_color(message: types.Message, state: FSMContext):
     """
     Process the eye color input.
@@ -305,7 +306,7 @@ async def process_human_eye_color(message: types.Message, state: FSMContext):
     # Store the similar colors in FSMContext
     await state.update_data(similar_colors=similar_colors)
 
-@dp.message_handler(state=ClassifyState.HUMAN_EYE_COLOR)
+@dp.message_handler(IsPrivate(), state=ClassifyState.HUMAN_EYE_COLOR)
 async def process_human_gender(message: types.Message, state: FSMContext):
     await message.delete()
     await message.answer(f"✨ You have to choose and click from the 🔢 number(s) above\nor you have to click 🔄 Reenter to edit your entry 📝")
@@ -343,7 +344,7 @@ async def process_color_reenter(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-@dp.message_handler(state=ClassifyState.human_hair_color)
+@dp.message_handler(IsPrivate(), state=ClassifyState.human_hair_color)
 async def process_human_eye_color(message: types.Message, state: FSMContext):
     """
     Process the eye color input.
@@ -424,7 +425,7 @@ async def process_color_reenter(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-@dp.message_handler(state=ClassifyState.human_height)
+@dp.message_handler(IsPrivate(), state=ClassifyState.human_height)
 async def process_human_height(message: types.Message, state: FSMContext):
     """
     Process the height input and display final data with edit/submit options.

@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 from mailbox import Message
 from os.path import defpath
-
+from filters import IsPrivate
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
@@ -14,7 +14,7 @@ from utils.db_api.google_sheets import GoogleSheetsClient
 
 
 # Entry point for alien classification
-@dp.message_handler(state=ClassifyAlienState.humanoid)
+@dp.message_handler(IsPrivate(), state=ClassifyAlienState.humanoid)
 async def start_alien_classification(message: types.Message):
     await message.delete()
     await message.answer(f"You have to choose (yes or no) from buttons above👆🏻")
@@ -190,7 +190,7 @@ async def submit_alien_data_no(call: CallbackQuery, state: FSMContext):
 
 
 
-@dp.message_handler(state=ClassifyAlienState.race)
+@dp.message_handler(IsPrivate(), state=ClassifyAlienState.race)
 async def process_alien_race(message: types.Message, state: FSMContext):
     """
     Process the alien's race input.
@@ -205,7 +205,7 @@ async def process_alien_race(message: types.Message, state: FSMContext):
     await message.answer("🎨 What is the alien's skin color?")
     await ClassifyAlienState.skin_color.set()
 
-@dp.message_handler(state=ClassifyAlienState.skin_color)
+@dp.message_handler(IsPrivate(), state=ClassifyAlienState.skin_color)
 async def process_alien_skin_color(message: types.Message, state: FSMContext):
     """
     Process the alien's skin color input.
@@ -226,7 +226,7 @@ async def process_alien_skin_color(message: types.Message, state: FSMContext):
     await message.answer("🛸 Is the alien dangerous?", reply_markup=keyboard)
     await ClassifyAlienState.dangerous.set()
 
-@dp.message_handler(state=ClassifyAlienState.dangerous)
+@dp.message_handler(IsPrivate(), state=ClassifyAlienState.dangerous)
 async def error_dangerous(message: types.Message, state: FSMContext):
     await message.delete()
     await message.answer(f"You have choose yes or no button above👆🏻")
@@ -248,7 +248,7 @@ async def process_alien_dangerous(call: CallbackQuery, state: FSMContext):
     await call.message.edit_text("🛸 Does the alien have a reason?", reply_markup=keyboard)
     await ClassifyAlienState.has_reason.set()
 
-@dp.message_handler(state=ClassifyAlienState.has_reason)
+@dp.message_handler(IsPrivate(), state=ClassifyAlienState.has_reason)
 async def error_dangerous(message: types.Message, state: FSMContext):
     await message.delete()
     await message.answer(f"You have choose yes or no button above👆🏻")
@@ -265,7 +265,7 @@ async def process_alien_reason(call: CallbackQuery, state: FSMContext):
     await ClassifyAlienState.weight.set()
 
 
-@dp.message_handler(state=ClassifyAlienState.weight)
+@dp.message_handler(IsPrivate(), state=ClassifyAlienState.weight)
 async def process_alien_weight(message: types.Message, state: FSMContext):
     """
     Process the alien's weight input and display all collected data.
@@ -325,7 +325,7 @@ async def edit_alien_data(call: CallbackQuery, state: FSMContext):
     )
 
     # Create an inline keyboard with options to edit specific fields
-    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton(text="1️⃣ Humanoid", callback_data="edit_humanoid"),
         InlineKeyboardButton(text="2️⃣ Race", callback_data="edit_race"),

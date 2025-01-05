@@ -5,11 +5,12 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQu
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from loader import dp, bot
+from filters import IsPrivate
 from data.predefined_lists import animals, colors
 from states.classify_state import ClassifyAnimalState
 from utils.db_api.google_sheets import GoogleSheetsClient
 
-@dp.message_handler(state=ClassifyAnimalState.species)
+@dp.message_handler(IsPrivate(), state=ClassifyAnimalState.species)
 async def process_animal_species(message: types.Message, state: FSMContext):
     """
     Process the species input.
@@ -48,7 +49,7 @@ async def process_animal_species(message: types.Message, state: FSMContext):
     await state.update_data(similar_animals=similar_animals)
 
 
-@dp.message_handler(state=ClassifyAnimalState.SPECIES)
+@dp.message_handler(IsPrivate(), state=ClassifyAnimalState.SPECIES)
 async def process_animal_species_repeat(message: types.Message, state: FSMContext):
     await message.delete()
     await message.answer("✨ You have to choose and click from the 🔢 number(s) above\nor you have to click 🔄 Reenter to edit your entry 📝")
@@ -91,7 +92,7 @@ async def process_animal_reenter(call: CallbackQuery, state: FSMContext):
     await call.message.edit_text("Please provide the species again:")
     await call.answer()
 
-@dp.message_handler(state=ClassifyAnimalState.mammal)
+@dp.message_handler(IsPrivate(), state=ClassifyAnimalState.mammal)
 async def process_animal_mammal(message: types.Message, state: FSMContext):
     await message.delete()
     await message.answer(f"You have to choose, yes or no button above\nnothing else is accepted")
@@ -118,7 +119,7 @@ async def process_mammal_response(call: CallbackQuery, state: FSMContext):
     await call.message.answer("🦁 Is this a predator? Please select one:", reply_markup=keyboard)
     await ClassifyAnimalState.predator.set()
 
-@dp.message_handler(state=ClassifyAnimalState.predator)
+@dp.message_handler(IsPrivate(), state=ClassifyAnimalState.predator)
 async def process_animal_mammal(message: types.Message, state: FSMContext):
     await message.delete()
     await message.answer(f"You have to choose, yes or no button above\nnothing else is accepted")
@@ -140,7 +141,7 @@ async def process_predator_response(call: CallbackQuery, state: FSMContext):
     await ClassifyAnimalState.color.set()
 
 
-@dp.message_handler(state=ClassifyAnimalState.color)
+@dp.message_handler(IsPrivate(), state=ClassifyAnimalState.color)
 async def process_animal_color(message: types.Message, state: FSMContext):
     """
     Process the color input.
@@ -213,7 +214,7 @@ async def process_color_reenter(call: CallbackQuery, state: FSMContext):
     await call.message.edit_text("🎨 Please provide the color again:")
     await call.answer()
 
-@dp.message_handler(state=ClassifyAnimalState.weight)
+@dp.message_handler(IsPrivate(), state=ClassifyAnimalState.weight)
 async def process_animal_weight(message: types.Message, state: FSMContext):
     """
     Process the weight input.
@@ -240,7 +241,7 @@ async def process_animal_weight(message: types.Message, state: FSMContext):
     await ClassifyAnimalState.age.set()
 
 
-@dp.message_handler(state=ClassifyAnimalState.age)
+@dp.message_handler(IsPrivate(), state=ClassifyAnimalState.age)
 async def process_animal_age(message: types.Message, state: FSMContext):
     """
     Process the age input.
