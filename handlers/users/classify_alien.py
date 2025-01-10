@@ -11,6 +11,7 @@ from loader import dp, bot
 from states.classify_state import ClassifyAlienState
 from data.predefined_lists import colors  # Assuming skin colors might be predefined
 from utils.db_api.google_sheets import GoogleSheetsClient
+from data.config import GROUP_ID
 
 
 # Entry point for alien classification
@@ -470,7 +471,7 @@ async def submit_alien_data(call: CallbackQuery, state: FSMContext):
         f"⚖️ *Weight*: {data.get('weight', 'N/A')}\n"
     )
 
-    group_id = -1002292534432  # Replace with your group ID
+    group_id = GROUP_ID  # Replace with your group ID
 
     try:
         # Post to Telegram group

@@ -13,6 +13,7 @@ from states.classify_state import ClassifyState, ClassifyAnimalState, ClassifyAl
 from keyboards.inline.choose_type import choose_type_keyboard
 from data.predefined_lists import nationalities, colors
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from data.config import GROUP_ID
 
 
 @dp.message_handler(IsPrivate(),Command("classify"))
@@ -671,7 +672,7 @@ async def handle_submit_data(call: CallbackQuery, state: FSMContext):
     }
 
     # Telegram group ID
-    group_id = -1002292534432  # Replace with your actual group ID
+    group_id = GROUP_ID  # Replace with your actual group ID
 
     try:
         # Post to Telegram group

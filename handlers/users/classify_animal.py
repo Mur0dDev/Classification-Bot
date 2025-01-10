@@ -9,6 +9,7 @@ from filters import IsPrivate
 from data.predefined_lists import animals, colors
 from states.classify_state import ClassifyAnimalState
 from utils.db_api.google_sheets import GoogleSheetsClient
+from data.config import GROUP_ID
 
 @dp.message_handler(IsPrivate(), state=ClassifyAnimalState.species)
 async def process_animal_species(message: types.Message, state: FSMContext):
@@ -417,7 +418,7 @@ async def submit_animal_data(call: CallbackQuery, state: FSMContext):
 
     data = await state.get_data()
     # Telegram group ID
-    group_id = -1002292534432  # Replace with your actual group ID
+    group_id = GROUP_ID  # Replace with your actual group ID
 
     # Initialize Google Sheets client
     sheets_client = GoogleSheetsClient(credentials_file="credentials.json",
